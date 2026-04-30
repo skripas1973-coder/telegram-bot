@@ -1,34 +1,28 @@
 import telebot
-import os
 import requests
 import time
+import os
 
 TOKEN = os.getenv("TOKEN")
-AI_KEY = os.getenv("AI_KEY")
 
 bot = telebot.TeleBot(TOKEN)
 
 def ask_ai(prompt):
-    response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {AI_KEY}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "mistralai/mistral-7b-instruct",  # ✅ бесплатная модель
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
-    )
+    try:
+        response = requests.post(
+            "https://api.affiliateplus.xyz/api/chatbot",
+            json={
+                "message": prompt,
+                "botname": "Bot",
+                "ownername": "User"
+            }
+        )
 
-    data = response.json()
+        data = response.json()
+        return data["message"]
 
-    if "choices" in data:
-        return data["choices"][0]["message"]["content"]
-    else:
-        return f"❌ Ошибка:\n{data}"
+    except:
+        return "Ошибка ИИ 😢"
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -46,18 +40,18 @@ def dialogue(message):
 
     time.sleep(2)
 
-    ai2 = ask_ai(f"Ответь на это сообщение:\n{ai1}")
+    ai2 = ask_ai(ai1)
     bot.send_message(chat_id, f"🧠 Бот 2:\n{ai2}")
 
     time.sleep(2)
 
-    ai3 = ask_ai(f"Ответь на это:\n{ai2}")
+    ai3 = ask_ai(ai2)
     bot.send_message(chat_id, f"🤖 Бот 1:\n{ai3}")
 
     time.sleep(2)
 
-    ai4 = ask_ai(f"Ответь на это:\n{ai3}")
+    ai4 = ask_ai(ai3)
     bot.send_message(chat_id, f"🧠 Бот 2:\n{ai4}")
 
-print("✅ Бот с ИИ запущен")
+print("✅ Бесплатный ИИ бот запущен")
 bot.infinity_polling()
