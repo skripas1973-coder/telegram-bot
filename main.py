@@ -1,57 +1,71 @@
 import telebot
+import os
 import requests
 import time
-import os
 
 TOKEN = os.getenv("TOKEN")
+AI_KEY = os.getenv("AI_KEY")
+
+if TOKEN is None or AI_KEY is None:
+    print("❌ Нет TOKEN или AI_KEY")
+    exit()
 
 bot = telebot.TeleBot(TOKEN)
 
+# функция запроса к ИИ
 def ask_ai(prompt):
     try:
         response = requests.post(
-            "https://api.affiliateplus.xyz/api/chatbot",
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {AI_KEY}",
+                "Content-Type": "application/json"
+            },
             json={
-                "message": prompt,
-                "botname": "Bot",
-                "ownername": "User"
+                "model": "openchat/openchat-7b:free",  # 🔥 ВОТ ТУТ ВАЖНО
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ]
             }
         )
 
         data = response.json()
-        return data["message"]
 
-    except:
-        return "Ошибка ИИ 😢"
+        if "error" in data:
+            return f"❌ Ошибка:\n{data}"
+
+        return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        return f"❌ Ошибка: {e}"
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, "🤖 Два ИИ начинают диалог...\nНапиши тему")
 
+
 @bot.message_handler(func=lambda message: True)
-def dialogue(message):
-    chat_id = message.chat.id
+def chat(message):
     topic = message.text
 
-    bot.send_message(chat_id, "🧠 ИИ думают...")
+    bot.send_message(message.chat.id, "🧠 ИИ думают...")
 
-    ai1 = ask_ai(f"Начни разговор на тему: {topic}")
-    bot.send_message(chat_id, f"🤖 Бот 1:\n{ai1}")
+    msg = topic
 
-    time.sleep(2)
+    for i in range(4):
+        answer1 = ask_ai(msg)
+        bot.send_message(message.chat.id, f"🤖 Бот 1:\n{answer1}")
 
-    ai2 = ask_ai(ai1)
-    bot.send_message(chat_id, f"🧠 Бот 2:\n{ai2}")
+        time.sleep(2)
 
-    time.sleep(2)
+        answer2 = ask_ai(answer1)
+        bot.send_message(message.chat.id, f"🧠 Бот 2:\n{answer2}")
 
-    ai3 = ask_ai(ai2)
-    bot.send_message(chat_id, f"🤖 Бот 1:\n{ai3}")
+        time.sleep(2)
 
-    time.sleep(2)
+        msg = answer2
 
-    ai4 = ask_ai(ai3)
-    bot.send_message(chat_id, f"🧠 Бот 2:\n{ai4}")
 
-print("✅ Бесплатный ИИ бот запущен")
+print("Бот запущен...")
 bot.infinity_polling()
