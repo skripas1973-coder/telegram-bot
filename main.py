@@ -6,14 +6,6 @@ import time
 TOKEN = os.getenv("TOKEN")
 AI_KEY = os.getenv("AI_KEY")
 
-if TOKEN is None:
-    print("❌ TOKEN не найден!")
-    exit()
-
-if AI_KEY is None:
-    print("❌ AI_KEY не найден!")
-    exit()
-
 bot = telebot.TeleBot(TOKEN)
 
 def ask_ai(prompt):
@@ -24,7 +16,7 @@ def ask_ai(prompt):
             "Content-Type": "application/json"
         },
         json={
-            "model": "openai/gpt-3.5-turbo",
+            "model": "mistralai/mistral-7b-instruct",  # ✅ бесплатная модель
             "messages": [
                 {"role": "user", "content": prompt}
             ]
@@ -32,8 +24,6 @@ def ask_ai(prompt):
     )
 
     data = response.json()
-
-    print("DEBUG:", data)  # 👉 покажет ошибку в логах Railway
 
     if "choices" in data:
         return data["choices"][0]["message"]["content"]
