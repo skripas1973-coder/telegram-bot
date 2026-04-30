@@ -12,7 +12,6 @@ if TOKEN is None or AI_KEY is None:
 
 bot = telebot.TeleBot(TOKEN)
 
-# функция запроса к ИИ
 def ask_ai(prompt):
     try:
         response = requests.post(
@@ -22,7 +21,7 @@ def ask_ai(prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "openchat/openchat-7b:free",  # 🔥 ВОТ ТУТ ВАЖНО
+                "model": "meta-llama/llama-3-8b-instruct:free",
                 "messages": [
                     {"role": "user", "content": prompt}
                 ]
